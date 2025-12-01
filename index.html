@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soal Online - Koding dan Kecerdasan Artifisial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #6366f1;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .token-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 3rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .token-input {
+            font-size: 1.5rem;
+            letter-spacing: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--danger-color);
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .option-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover {
+            border-color: var(--primary-color);
+            background-color: #f0f9ff;
+        }
+
+        .option-card.selected {
+            border-color: var(--primary-color);
+            background-color: #eff6ff;
+        }
+
+        .question-nav {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 0.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .question-nav.answered {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .question-nav.current {
+            background-color: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .question-nav:not(.answered):not(.current) {
+            background-color: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .score-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-info {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+        }
+
+        .btn-info:hover {
+            background-color: #31d2f2;
+            border-color: #25cff2;
+        }
+
+        .header-info {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar-custom {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e5e7eb;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transition: width 0.3s ease;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(79, 70, 229, 0.05);
+            cursor: pointer;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background-color: var(--success-color);
+        }
+
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Laman Token -->
+    <div id="tokenPage" class="page active">
+        <div class="container mt-5">
+            <div class="token-card">
+                <div class="text-center mb-4">
+                    <i class="bi bi-shield-lock" style="font-size: 3rem; color: var(--primary-color);"></i>
+                    <h2 class="mt-3">Akses Soal Online</h2>
+                </div>
+                
+                <div class="header-info text-center">
+                    <h4 class="mb-2">Koding dan Kecerdasan Artifisial</h4>
+                    <p class="mb-1"><i class="bi bi-person-badge"></i> Gazali Rahman, ST</p>
+                    <p class="mb-0"><i class="bi bi-building"></i> SMK Muhammadiyah Berau</p>
+                </div>
+
+                <form id="tokenForm">
+                    <div class="mb-3">
+                        <label class="form-label">Token Akses</label>
+                        <input type="text" class="form-control token-input" id="tokenInput" 
+                               maxlength="6" placeholder="XXXXXX" required>
+                        <div class="invalid-feedback">Token tidak valid!</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nama Siswa</label>
+                        <input type="text" class="form-control" id="studentName" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Kelas</label>
+                        <select class="form-select" id="studentClass" required>
+                            <option value="">Pilih Kelas</option>
+                            <option value="X DPIB">X DPIB</option>
+                            <option value="X TO 1">X TO 1</option>
+                            <option value="X TO 2">X TO 2</option>
+                            <option value="X TO 3">X TO 3</option>
+                            <option value="X TO 4">X TO 4</option>
+                            <option value="X TO 5">X TO 5</option>
+                            <option value="X TO 6">X TO 6</option>
+                            <option value="X TO 7">X TO 7</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-box-arrow-in-right"></i> Akses Soal
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Laman Soal -->
+    <div id="quizPage" class="page">
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="question-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="timer">
+                                <i class="bi bi-clock"></i> <span id="timerDisplay">30:00</span>
+                            </div>
+                            <button class="btn btn-danger" id="submitBtn">
+                                <i class="bi bi-send"></i> Kumpulkan
+                            </button>
+                        </div>
+
+                        <div class="progress-bar-custom mb-3">
+                            <div class="progress-fill" id="progressBar"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="badge bg-primary" id="questionNumber">Soal 1/10</span>
+                        </div>
+
+                        <h4 id="questionText" class="mb-4"></h4>
+
+                        <div id="optionsContainer"></div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button class="btn btn-outline-primary" id="prevBtn" disabled>
+                                <i class="bi bi-arrow-left"></i> Sebelumnya
+                            </button>
+                            <button class="btn btn-primary" id="nextBtn">
+                                Selanjutnya <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="question-card">
+                        <h5 class="mb-3">Navigasi Soal</h5>
+                        <div id="questionNav" class="text-center"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Laman Hasil -->
+    <div id="resultPage" class="page">
+        <div class="container mt-5">
+            <div class="result-card">
+                <i class="bi bi-check-circle" style="font-size: 4rem; color: var(--success-color);"></i>
+                <h2 class="mt-3">Terima Kasih!</h2>
+                <p class="text-muted">Anda telah menyelesaikan tes</p>
+                
+                <div class="mt-4">
+                    <h5 id="resultName"></h5>
+                    <p class="text-muted" id="resultClass"></p>
+                    <div class="score-display" id="scoreDisplay">0</div>
+                    <p class="text-muted">Nilai Anda</p>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <button class="btn btn-primary" id="shareBtn">
+                        <i class="bi bi-share"></i> Share Hasil
+                    </button>
+                    <button class="btn btn-info text-white" id="viewRekapBtn">
+                        <i class="bi bi-table"></i> Lihat Rekap
+                    </button>
+                    <button class="btn btn-outline-primary" id="retryBtn">
+                        <i class="bi bi-arrow-clockwise"></i> Ulangi Tes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Laman Rekap -->
+    <div id="rekapPage" class="page">
+        <div class="container mt-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="bi bi-table"></i> Rekap Nilai Siswa</h4>
+                        <button class="btn btn-light" id="backFromRekapBtn">
+                            <i class="bi bi-arrow-left"></i> Kembali
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Siswa</th>
+                                    <th>Kelas</th>
+                                    <th>Nilai</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rekapTableBody">
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyRekap" class="text-center py-5" style="display: none;">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: #6c757d;"></i>
+                        <p class="mt-3 text-muted">Belum ada data siswa</p>
+                    </div>
+                    <div id="loadingRekap" class="text-center py-5" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Mengambil data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Data soal
+        const questions = [
+            {
+                question: "Apa yang dimaksud dengan Artificial Intelligence (AI)?",
+                options: [
+                    "Sistem komputer yang dapat meniru kecerdasan manusia",
+                    "Program untuk bermain game",
+                    "Hardware khusus untuk komputer",
+                    "Bahasa pemrograman baru"
+                ],
+                correct: 0
+            },
+            {
+                question: "Langkah pertama dalam berpikir komputasional adalah…",
+                options: [
+                    "Algoritma",
+                    "Pola",
+                    "Abstraksi",
+                    "Decomposition (dekomposisi)",
+                    "Evaluasi"
+                ],
+                correct: 3
+            },
+            {
+                question: "Kemampuan menemukan kesamaan pada beberapa masalah disebut…",
+                options: [
+                    "Abstraksi",
+                    "Pengenalan pola",
+                    "Evaluasi",
+                    "Algoritma",
+                    "Debugging"
+                ],
+                correct: 1
+            },
+            {
+                question: "Abstraksi dalam berpikir komputasional berarti…",
+                options: [
+                    "Menghapus seluruh informasi",
+                    "Menyederhanakan masalah dengan fokus pada hal penting",
+                    "Mencari pola tersembunyi",
+                    "Membuat solusi otomatis",
+                    "Menulis kode program"
+                ],
+                correct: 1
+            },
+            {
+                question: "Algoritma adalah…",
+                options: [
+                    "Hasil akhir program",
+                    "Bahasa pemrograman",
+                    "Urutan langkah-langkah sistematis untuk menyelesaikan masalah",
+                    "Kesalahan dalam program",
+                    "Bentuk debugging"
+                ],
+                correct: 2
+            },
+            {
+                question: "Contoh dekomposisi adalah…",
+                options: [
+                    "Mengulang langkah hingga selesai",
+                    "Memecah masalah besar menjadi beberapa bagian kecil",
+                    "Menghapus bagian tidak penting",
+                    "Mencari kesamaan antar data",
+                    "Menyusun kode tanpa perencanaan"
+                ],
+                correct: 1
+            },
+            {
+                question: "Ketika siswa melakukan pengecekan ulang langkah-langkah solusi, ia sedang melakukan…",
+                options: [
+                    "Abstraksi",
+                    "Evaluasi",
+                    "Simulasi",
+                    "Analisis data",
+                    "Pengkodean"
+                ],
+                correct: 1
+            },
+            {
+                question: "Berikut contoh penggunaan pola dalam kehidupan sehari-hari…",
+                options: [
+                    "Menyusun jadwal piket",
+                    "Menyusun langkah memasak",
+                    "Menyelesaikan soal matematika",
+                    "Mengenali jam sibuk berdasarkan hari sebelumnya",
+                    "Menulis program"
+                ],
+                correct: 3
+            },
+            {
+                question: "Dalam algoritma, \"percabangan\" berarti…",
+                options: [
+                    "Mengulang langkah",
+                    "Menghapus data",
+                    "Memilih aksi berdasarkan kondisi tertentu",
+                    "Menggabungkan data",
+                    "Mengurutkan data otomatis"
+                ],
+                correct: 2
+            },
+            {
+                question: "Debugging bertujuan untuk…",
+                options: [
+                    "Membuat pola baru",
+                    "Menjalankan program lebih cepat",
+                    "Mencari dan memperbaiki kesalahan",
+                    "Menghapus keseluruhan program",
+                    "Menambah fitur baru"
+                ],
+                correct: 2
+            },
+            {
+                question: "Contoh algoritma paling sederhana adalah…",
+                options: [
+                    "Membuat daftar belanja",
+                    "Langkah-langkah membuat mie instan",
+                    "Membaca buku",
+                    "Browsing internet",
+                    "Mendengarkan musik"
+                ],
+                correct: 1
+            },
+            {
+                question: "Etika AI yang baik harus memperhatikan…",
+                options: [
+                    "Hak cipta manusia saja",
+                    "Kepentingan produsen teknologi",
+                    "Keamanan, privasi, dan keadilan",
+                    "Kecepatan komputasi",
+                    "Jumlah data yang digunakan"
+                ],
+                correct: 2
+            },
+            {
+                question: "Penggunaan data pribadi tanpa izin melanggar prinsip…",
+                options: [
+                    "Efisiensi",
+                    "Privasi",
+                    "Optimasi",
+                    "Kecepatan",
+                    "Akurasi"
+                ],
+                correct: 1
+            },
+            {
+                question: "Bias dalam AI dapat terjadi ketika…",
+                options: [
+                    "Data terlalu banyak",
+                    "Model bekerja terlalu cepat",
+                    "Data pelatihan tidak seimbang",
+                    "Jaringan internet lambat",
+                    "Komputer tidak kuat"
+                ],
+                correct: 2
+            },
+            {
+                question: "Contoh penggunaan AI yang etis adalah…",
+                options: [
+                    "Menggunakan foto orang tanpa izin untuk pelatihan",
+                    "Menggunakan deepfake untuk menipu",
+                    "Memakai AI untuk membantu tunanetra membaca teks",
+                    "Memata-matai teman dengan kamera",
+                    "Menyebarkan informasi palsu"
+                ],
+                correct: 2
+            },
+            {
+                question: "Transparansi AI berarti…",
+                options: [
+                    "AI harus selalu gratis",
+                    "Pengguna mengetahui cara kerja dan batasan AI",
+                    "AI dapat digunakan tanpa aturan",
+                    "AI bekerja tanpa campur tangan manusia",
+                    "AI harus disimpan secara rahasia"
+                ],
+                correct: 1
+            },
+            {
+                question: "Salah satu risiko AI generatif adalah…",
+                options: [
+                    "Dapat membuat listrik padam",
+                    "Memproduksi informasi palsu (misinformasi)",
+                    "Membuat komputer semakin lambat",
+                    "Menghilangkan semua pekerjaan",
+                    "Mengurangi kapasitas memori"
+                ],
+                correct: 1
+            },
+            {
+                question: "Prinsip fairness (keadilan) dalam AI berarti…",
+                options: [
+                    "Semua data harus dihapus",
+                    "AI tidak boleh memihak kelompok tertentu",
+                    "AI harus bekerja lebih cepat untuk semua orang",
+                    "AI tidak perlu diuji",
+                    "AI harus selalu online"
+                ],
+                correct: 1
+            },
+            {
+                question: "AI tidak boleh digunakan untuk…",
+                options: [
+                    "Mendeteksi penyakit",
+                    "Mendukung pembelajaran",
+                    "Menyebarkan ujaran kebencian",
+                    "Membantu navigasi perjalanan",
+                    "Membaca tanda jalan"
+                ],
+                correct: 2
+            },
+            {
+                question: "Contoh pelanggaran etika digital adalah…",
+                options: [
+                    "Mengutip sumber dengan benar",
+                    "Menyimpan file pribadi dengan aman",
+                    "Menggunakan aplikasi bajakan",
+                    "Menjaga password",
+                    "Memperbarui antivirus"
+                ],
+                correct: 2
+            },
+            {
+                question: "AI yang aman harus…",
+                options: [
+                    "Sulit digunakan",
+                    "Tidak memiliki panduan",
+                    "Mengurangi risiko penyalahgunaan",
+                    "Menyembunyikan seluruh fitur",
+                    "Hanya dibuat untuk hiburan"
+                ],
+                correct: 2
+            },
+            {
+                question: "AI adalah…",
+                options: [
+                    "Komputer yang bisa hidup",
+                    "Teknologi yang membuat mesin mampu meniru kecerdasan manusia",
+                    "Robot yang bisa berbicara",
+                    "Program untuk bermain game",
+                    "Mesin pencari internet"
+                ],
+                correct: 1
+            },
+            {
+                question: "Contoh sederhana AI yang sering digunakan adalah…",
+                options: [
+                    "Foto kertas",
+                    "Lampu pijar",
+                    "Asisten virtual seperti Google Assistant",
+                    "Kalender meja",
+                    "Penghapus pensil"
+                ],
+                correct: 2
+            },
+            {
+                question: "Machine Learning adalah…",
+                options: [
+                    "Cara komputer beristirahat",
+                    "Belajar tanpa data",
+                    "Proses komputer belajar dari data",
+                    "Proses komputer tidur",
+                    "Penghapusan data"
+                ],
+                correct: 2
+            },
+            {
+                question: "Contoh implementasi AI di sekolah adalah…",
+                options: [
+                    "Meja pintar",
+                    "Sistem absensi wajah",
+                    "Penghapus papan",
+                    "Stop kontak listrik",
+                    "Tangga darurat"
+                ],
+                correct: 1
+            },
+            {
+                question: "Computer Vision berfokus pada…",
+                options: [
+                    "Suara",
+                    "Gerakan angin",
+                    "Kemampuan komputer memahami gambar dan video",
+                    "Mendeteksi bau",
+                    "Memperkuat sinyal internet"
+                ],
+                correct: 2
+            },
+            {
+                question: "Natural Language Processing (NLP) digunakan untuk…",
+                options: [
+                    "Menggambar 3D",
+                    "Mengubah suara menjadi teks",
+                    "Mengukur suhu ruangan",
+                    "Memperbaiki hardware",
+                    "Menyusun kabel jaringan"
+                ],
+                correct: 1
+            },
+            {
+                question: "Chatbot adalah…",
+                options: [
+                    "Robot fisik",
+                    "Program yang dapat berkomunikasi menggunakan teks atau suara",
+                    "Mesin untuk menggambar",
+                    "Sistem pengendali drone",
+                    "Alat musik digital"
+                ],
+                correct: 1
+            },
+            {
+                question: "Data training digunakan untuk…",
+                options: [
+                    "Menghapus program",
+                    "Menguji komputer",
+                    "Mengajarkan AI cara membuat keputusan",
+                    "Menyimpan file pribadi",
+                    "Mempercepat internet"
+                ],
+                correct: 2
+            },
+            {
+                question: "Deep Learning berbeda dari Machine Learning karena…",
+                options: [
+                    "Tidak membutuhkan data",
+                    "Menggunakan jaringan saraf tiruan berlapis-lapis",
+                    "Berjalan tanpa listrik",
+                    "Hanya digunakan pada robot",
+                    "Menghapus data secara otomatis"
+                ],
+                correct: 1
+            },
+            {
+                question: "AI dapat membantu manusia dalam…",
+                options: [
+                    "Menyebarkan hoaks",
+                    "Membuat konflik",
+                    "Menyelesaikan tugas yang berulang dan berat",
+                    "Menghack data pribadi",
+                    "Mengurangi keamanan"
+                ],
+                correct: 2
+            }
+        ];
+
+        // Token valid (bisa diubah sesuai kebutuhan)
+        const validTokens = ['AI2024', 'KODE01', 'SMKMUH', 'SHOLAT'];
+        
+        // URL Google Apps Script - GANTI DENGAN URL ANDA_Sudah
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhpbSPSnwrmq9ehQw8i73yp0zP6PJfuEpzIfo6IlfI733aOAFpX2nlL313FuGSRQBd8Q/exec';
+
+        // State aplikasi
+        let currentPage = 'token';
+        let currentQuestion = 0;
+        let answers = [];
+        let timer = null;
+        let timeLeft = 30 * 60; // 30 menit dalam detik
+        let studentData = {};
+
+        // DOM Elements
+        const tokenPage = document.getElementById('tokenPage');
+        const quizPage = document.getElementById('quizPage');
+        const resultPage = document.getElementById('resultPage');
+        const rekapPage = document.getElementById('rekapPage');
+        const tokenForm = document.getElementById('tokenForm');
+        const tokenInput = document.getElementById('tokenInput');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const questionNumber = document.getElementById('questionNumber');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const questionNav = document.getElementById('questionNav');
+        const progressBar = document.getElementById('progressBar');
+        const notification = document.getElementById('notification');
+
+        // Validasi token real-time
+        tokenInput.addEventListener('input', function() {
+            const token = this.value.toUpperCase();
+            this.value = token;
+            
+            if (token.length === 6) {
+                if (validTokens.includes(token)) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            } else {
+                this.classList.remove('is-valid', 'is-invalid');
+            }
+        });
+
+        // Submit token form
+        tokenForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const token = tokenInput.value.toUpperCase();
+            const name = document.getElementById('studentName').value;
+            const studentClass = document.getElementById('studentClass').value;
+            
+            if (validTokens.includes(token) && name && studentClass) {
+                studentData = { name, class: studentClass };
+                showPage('quiz');
+                startQuiz();
+            }
+        });
+
+        // Fungsi navigasi halaman
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            switch(page) {
+                case 'token':
+                    tokenPage.classList.add('active');
+                    break;
+                case 'quiz':
+                    quizPage.classList.add('active');
+                    break;
+                case 'result':
+                    resultPage.classList.add('active');
+                    break;
+                case 'rekap':
+                    rekapPage.classList.add('active');
+                    break;
+            }
+        }
+
+        // Fungsi untuk menampilkan notifikasi
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Mulai kuis
+        function startQuiz() {
+            currentQuestion = 0;
+            answers = new Array(questions.length).fill(null);
+            timeLeft = 30 * 60;
+            
+            renderQuestion();
+            renderQuestionNav();
+            startTimer();
+        }
+
+        // Timer
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    submitQuiz();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 300) { // 5 menit terakhir
+                timerDisplay.style.color = '#ef4444';
+            }
+        }
+
+        // Render pertanyaan
+        function renderQuestion() {
+            const q = questions[currentQuestion];
+            questionText.textContent = q.question;
+            questionNumber.textContent = `Soal ${currentQuestion + 1}/${questions.length}`;
+            
+            // Update progress bar
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // Render opsi
+            optionsContainer.innerHTML = '';
+            q.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option-card';
+                if (answers[currentQuestion] === index) {
+                    optionDiv.classList.add('selected');
+                }
+                
+                optionDiv.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="option" 
+                               id="option${index}" value="${index}" 
+                               ${answers[currentQuestion] === index ? 'checked' : ''}>
+                        <label class="form-check-label" for="option${index}">
+                            ${option}
+                        </label>
+                    </div>
+                `;
+                
+                optionDiv.addEventListener('click', () => selectOption(index));
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // Update navigasi
+            prevBtn.disabled = currentQuestion === 0;
+            nextBtn.textContent = currentQuestion === questions.length - 1 ? 'Selesai' : 'Selanjutnya';
+            nextBtn.innerHTML = currentQuestion === questions.length - 1 ? 
+                '<i class="bi bi-check"></i> Selesai' : 
+                'Selanjutnya <i class="bi bi-arrow-right"></i>';
+            
+            updateQuestionNav();
+        }
+
+        // Pilih opsi
+        function selectOption(index) {
+            answers[currentQuestion] = index;
+            renderQuestion();
+        }
+
+        // Render navigasi soal
+        function renderQuestionNav() {
+            questionNav.innerHTML = '';
+            for (let i = 0; i < questions.length; i++) {
+                const nav = document.createElement('div');
+                nav.className = 'question-nav';
+                nav.textContent = i + 1;
+                nav.addEventListener('click', () => goToQuestion(i));
+                questionNav.appendChild(nav);
+            }
+            updateQuestionNav();
+        }
+
+        function updateQuestionNav() {
+            const navItems = questionNav.querySelectorAll('.question-nav');
+            navItems.forEach((item, index) => {
+                item.classList.remove('current', 'answered');
+                if (index === currentQuestion) {
+                    item.classList.add('current');
+                } else if (answers[index] !== null) {
+                    item.classList.add('answered');
+                }
+            });
+        }
+
+        // Navigasi soal
+        function goToQuestion(index) {
+            currentQuestion = index;
+            renderQuestion();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                renderQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                renderQuestion();
+            } else {
+                submitQuiz();
+            }
+        });
+
+        submitBtn.addEventListener('click', () => {
+            if (confirm('Apakah Anda yakin ingin mengumpulkan jawaban?')) {
+                submitQuiz();
+            }
+        });
+
+        // Fungsi untuk menyimpan data ke Google Sheets
+        async function saveToGoogleSheets(data) {
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Penting untuk menghindari CORS issues
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                // Karena mode: 'no-cors', kita tidak bisa membaca respons
+                // tapi kita asumsikan berhasil jika tidak ada error
+                return true;
+            } catch (error) {
+                console.error('Error saving to Google Sheets:', error);
+                return false;
+            }
+        }
+
+        // Fungsi untuk mengambil data dari Google Sheets
+        async function getFromGoogleSheets() {
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    return result.data;
+                } else {
+                    throw new Error(result.message || 'Failed to fetch data');
+                }
+            } catch (error) {
+                console.error('Error fetching from Google Sheets:', error);
+                throw error;
+            }
+        }
+
+        // Fungsi untuk menyimpan data siswa
+        async function saveStudentData(name, studentClass, score) {
+            try {
+                // Simpan ke localStorage untuk offline
+                let localStudents = JSON.parse(localStorage.getItem('students')) || [];
+                const studentData = {
+                    name: name,
+                    class: studentClass,
+                    score: score,
+                    timestamp: new Date().toISOString(),
+                    id: Date.now()
+                };
+                
+                const existingIndex = localStudents.findIndex(s => s.name === name && s.class === studentClass);
+                if (existingIndex >= 0) {
+                    localStudents[existingIndex] = studentData;
+                } else {
+                    localStudents.push(studentData);
+                }
+                localStorage.setItem('students', JSON.stringify(localStudents));
+                
+                // Simpan ke Google Sheets
+                const success = await saveToGoogleSheets({
+                    name: name,
+                    class: studentClass,
+                    score: score
+                });
+                
+                if (success) {
+                    showNotification('Data berhasil disimpan');
+                } else {
+                    showNotification('Data tersimpan di localStorage (offline)', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving student data:', error);
+                showNotification('Gagal menyimpan data', 'error');
+            }
+        }
+
+        // Submit kuis
+        async function submitQuiz() {
+            clearInterval(timer);
+            
+            // Hitung nilai
+            let correct = 0;
+            answers.forEach((answer, index) => {
+                if (answer === questions[index].correct) {
+                    correct++;
+                }
+            });
+            
+            const score = Math.round((correct / questions.length) * 100);
+            
+            // Simpan data siswa
+            await saveStudentData(studentData.name, studentData.class, score);
+            
+            // Tampilkan hasil
+            document.getElementById('resultName').textContent = studentData.name;
+            document.getElementById('resultClass').textContent = `Kelas: ${studentData.class}`;
+            document.getElementById('scoreDisplay').textContent = score;
+            
+            showPage('result');
+        }
+
+        // Fungsi untuk menampilkan rekap
+        async function showRekap() {
+            const tbody = document.getElementById('rekapTableBody');
+            const emptyMessage = document.getElementById('emptyRekap');
+            const loadingMessage = document.getElementById('loadingRekap');
+            
+            tbody.innerHTML = '';
+            emptyMessage.style.display = 'none';
+            loadingMessage.style.display = 'block';
+            
+            try {
+                // Coba ambil dari Google Sheets
+                const students = await getFromGoogleSheets();
+                
+                if (students.length === 0) {
+                    // Fallback ke localStorage
+                    const localStudents = JSON.parse(localStorage.getItem('students')) || [];
+                    if (localStudents.length === 0) {
+                        emptyMessage.style.display = 'block';
+                        loadingMessage.style.display = 'none';
+                        return;
+                    }
+                    displayStudents(localStudents);
+                } else {
+                    displayStudents(students);
+                }
+            } catch (error) {
+                console.error('Error mengambil data dari Google Sheets:', error);
+                // Fallback ke localStorage
+                const localStudents = JSON.parse(localStorage.getItem('students')) || [];
+                if (localStudents.length === 0) {
+                    emptyMessage.style.display = 'block';
+                    loadingMessage.style.display = 'none';
+                    return;
+                }
+                displayStudents(localStudents);
+            }
+            
+            loadingMessage.style.display = 'none';
+        }
+
+        function displayStudents(students) {
+            const tbody = document.getElementById('rekapTableBody');
+            const emptyMessage = document.getElementById('emptyRekap');
+            
+            tbody.innerHTML = '';
+            emptyMessage.style.display = 'none';
+            
+            // Urutkan berdasarkan nilai tertinggi
+            students.sort((a, b) => b.score - a.score);
+            
+            students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                const statusBadge = student.score >= 70 ? 
+                    '<span class="badge bg-success">Lulus</span>' : 
+                    '<span class="badge bg-danger">Tidak Lulus</span>';
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${student.name}</td>
+                    <td>${student.class}</td>
+                    <td><strong>${student.score}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(${student.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Fungsi hapus data (hanya untuk localStorage)
+        function deleteStudent(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                let students = JSON.parse(localStorage.getItem('students')) || [];
+                students = students.filter(s => s.id != id);
+                localStorage.setItem('students', JSON.stringify(students));
+                showRekap();
+                showNotification('Data berhasil dihapus');
+            }
+        }
+
+        // Tombol share hasil
+        document.getElementById('shareBtn').addEventListener('click', () => {
+            const score = document.getElementById('scoreDisplay').textContent;
+            const text = `Saya telah menyelesaikan tes Koding dan Kecerdasan Artifisial dengan nilai ${score}!`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Hasil Tes Online',
+                    text: text
+                });
+            } else {
+                // Fallback untuk browser yang tidak support Web Share API
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('Teks hasil telah disalin ke clipboard!');
+                });
+            }
+        });
+
+        // Tombol lihat rekap
+        document.getElementById('viewRekapBtn').addEventListener('click', () => {
+            showPage('rekap');
+            showRekap();
+        });
+
+        // Tombol kembali dari rekap
+        document.getElementById('backFromRekapBtn').addEventListener('click', () => {
+            showPage('result');
+        });
+
+        // Tombol ulangi tes
+        document.getElementById('retryBtn').addEventListener('click', () => {
+            if (confirm('Apakah Anda yakin ingin mengulangi tes?')) {
+                showPage('token');
+                tokenForm.reset();
+                tokenInput.classList.remove('is-valid', 'is-invalid');
+            }
+        });
+    </script>
+</body>
+</html>
