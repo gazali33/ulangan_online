@@ -677,17 +677,6 @@
                 correct: 1
             },
             {
-                question: "Computer Vision berfokus pada…",
-                options: [
-                    "Suara",
-                    "Gerakan angin",
-                    "Kemampuan komputer memahami gambar dan video",
-                    "Mendeteksi bau",
-                    "Memperkuat sinyal internet"
-                ],
-                correct: 2
-            },
-            {
                 question: "Natural Language Processing (NLP) digunakan untuk…",
                 options: [
                     "Menggambar 3D",
@@ -1015,44 +1004,126 @@
             }
         }
 
-        // Fungsi untuk menyimpan data siswa
-        async function saveStudentData(name, studentClass, score) {
-            try {
-                // Simpan ke localStorage untuk offline
-                let localStudents = JSON.parse(localStorage.getItem('students')) || [];
-                const studentData = {
-                    name: name,
-                    class: studentClass,
-                    score: score,
-                    timestamp: new Date().toISOString(),
-                    id: Date.now()
-                };
-                
-                const existingIndex = localStudents.findIndex(s => s.name === name && s.class === studentClass);
-                if (existingIndex >= 0) {
-                    localStudents[existingIndex] = studentData;
-                } else {
-                    localStudents.push(studentData);
-                }
-                localStorage.setItem('students', JSON.stringify(localStudents));
-                
-                // Simpan ke Google Sheets
-                const success = await saveToGoogleSheets({
-                    name: name,
-                    class: studentClass,
-                    score: score
-                });
-                
-                if (success) {
-                    showNotification('Data berhasil disimpan');
-                } else {
-                    showNotification('Data tersimpan di localStorage (offline)', 'error');
-                }
-            } catch (error) {
-                console.error('Error saving student data:', error);
-                showNotification('Gagal menyimpan data', 'error');
-            }
+// Ganti fungsi saveStudentData dengan:
+async function saveStudentData(name, studentClass, score) {
+    try {
+        // Simpan ke localStorage untuk offline
+        let localStudents = JSON.parse(localStorage.getItem('students')) || [];
+        const studentData = {
+            name: name,
+            class: studentClass,
+            score: score,
+            timestamp: new Date().toISOString(),
+            id: Date.now()
+        };
+        
+        const existingIndex = localStudents.findIndex(s => s.name === name && s.class === studentClass);
+        if (existingIndex >= 0) {
+            localStudents[existingIndex] = studentData;
+        } else {
+            localStudents.push(studentData);
         }
+        localStorage.setItem('students', JSON.stringify(localStudents));
+        
+        // Simpan ke Google Sheets
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxhpbSPSnwrmq9ehQw8i73yp0zP6PJfuEpzIfo6IlfI733aOAFpX2nlL313FuGSRQBd8Q/exec'; // Ganti dengan URL dari Apps Script
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors', // Penting untuk menghindari CORS issues
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name,
+                class: studentClass,
+                score: score
+            })
+        });
+        
+        console.log('Data berhasil dikirim ke Google Sheets');
+    } catch (error) {
+        console.error('Error menyimpan ke Google Sheets:', error);
+        // Data sudah tersimpan di localStorage sebagai fallback
+    }
+}
+
+// Ganti fungsi showRekap dengan:
+async function showRekap() {
+    const tbody = document.getElementById('rekapTableBody');
+    const emptyMessage = document.getElementById('emptyRekap');
+    
+    tbody.innerHTML = '';
+    
+    try {
+        // Coba ambil dari Google Sheets
+        const scriptURL = 'GANTI_DENGAN_URL_APPS_SCRIPT_ANDA'; // Ganti dengan URL dari Apps Script
+        const response = await fetch(scriptURL);
+        const result = await response.json();
+        
+        if (result.status === 'success' && result.data.length > 0) {
+            displayStudents(result.data);
+        } else {
+            // Fallback ke localStorage
+            const localStudents = JSON.parse(localStorage.getItem('students')) || [];
+            if (localStudents.length === 0) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+            displayStudents(localStudents);
+        }
+    } catch (error) {
+        console.error('Error mengambil data dari Google Sheets:', error);
+        // Fallback ke localStorage
+        const localStudents = JSON.parse(localStorage.getItem('students')) || [];
+        if (localStudents.length === 0) {
+            emptyMessage.style.display = 'block';
+            return;
+        }
+        displayStudents(localStudents);
+    }
+}
+
+function displayStudents(students) {
+    const tbody = document.getElementById('rekapTableBody');
+    const emptyMessage = document.getElementById('emptyRekap');
+    
+    tbody.innerHTML = '';
+    emptyMessage.style.display = 'none';
+    
+    // Urutkan berdasarkan nilai tertinggi
+    students.sort((a, b) => b.score - a.score);
+    
+    students.forEach((student, index) => {
+        const row = document.createElement('tr');
+        const statusBadge = student.score >= 70 ? 
+            '<span class="badge bg-success">Lulus</span>' : 
+            '<span class="badge bg-danger">Tidak Lulus</span>';
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${student.name}</td>
+            <td>${student.class}</td>
+            <td><strong>${student.score}</strong></td>
+            <td>${statusBadge}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(${student.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Fungsi hapus data (hanya untuk localStorage)
+function deleteStudent(id) {
+    if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        students = students.filter(s => s.id != id);
+        localStorage.setItem('students', JSON.stringify(students));
+        showRekap();
+    }
+}
 
         // Submit kuis
         async function submitQuiz() {
