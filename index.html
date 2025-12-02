@@ -1047,6 +1047,41 @@ async function saveStudentData(name, studentClass, score) {
     }
 }
 
+// Fungsi hapus data (hanya untuk localStorage)
+function deleteStudent(id) {
+    if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        students = students.filter(s => s.id != id);
+        localStorage.setItem('students', JSON.stringify(students));
+        showRekap();
+    }
+}
+
+        // Submit kuis
+        async function submitQuiz() {
+            clearInterval(timer);
+            
+            // Hitung nilai
+            let correct = 0;
+            answers.forEach((answer, index) => {
+                if (answer === questions[index].correct) {
+                    correct++;
+                }
+            });
+            
+            const score = Math.round((correct / questions.length) * 100);
+            
+            // Simpan data siswa
+            await saveStudentData(studentData.name, studentData.class, score);
+            
+            // Tampilkan hasil
+            document.getElementById('resultName').textContent = studentData.name;
+            document.getElementById('resultClass').textContent = `Kelas: ${studentData.class}`;
+            document.getElementById('scoreDisplay').textContent = score;
+            
+            showPage('result');
+        }
+
 // Ganti fungsi showRekap dengan:
 async function showRekap() {
     const tbody = document.getElementById('rekapTableBody');
@@ -1114,114 +1149,6 @@ function displayStudents(students) {
         tbody.appendChild(row);
     });
 }
-
-// Fungsi hapus data (hanya untuk localStorage)
-function deleteStudent(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-        let students = JSON.parse(localStorage.getItem('students')) || [];
-        students = students.filter(s => s.id != id);
-        localStorage.setItem('students', JSON.stringify(students));
-        showRekap();
-    }
-}
-
-        // Submit kuis
-        async function submitQuiz() {
-            clearInterval(timer);
-            
-            // Hitung nilai
-            let correct = 0;
-            answers.forEach((answer, index) => {
-                if (answer === questions[index].correct) {
-                    correct++;
-                }
-            });
-            
-            const score = Math.round((correct / questions.length) * 100);
-            
-            // Simpan data siswa
-            await saveStudentData(studentData.name, studentData.class, score);
-            
-            // Tampilkan hasil
-            document.getElementById('resultName').textContent = studentData.name;
-            document.getElementById('resultClass').textContent = `Kelas: ${studentData.class}`;
-            document.getElementById('scoreDisplay').textContent = score;
-            
-            showPage('result');
-        }
-
-        // Fungsi untuk menampilkan rekap
-        async function showRekap() {
-            const tbody = document.getElementById('rekapTableBody');
-            const emptyMessage = document.getElementById('emptyRekap');
-            const loadingMessage = document.getElementById('loadingRekap');
-            
-            tbody.innerHTML = '';
-            emptyMessage.style.display = 'none';
-            loadingMessage.style.display = 'block';
-            
-            try {
-                // Coba ambil dari Google Sheets
-                const students = await getFromGoogleSheets();
-                
-                if (students.length === 0) {
-                    // Fallback ke localStorage
-                    const localStudents = JSON.parse(localStorage.getItem('students')) || [];
-                    if (localStudents.length === 0) {
-                        emptyMessage.style.display = 'block';
-                        loadingMessage.style.display = 'none';
-                        return;
-                    }
-                    displayStudents(localStudents);
-                } else {
-                    displayStudents(students);
-                }
-            } catch (error) {
-                console.error('Error mengambil data dari Google Sheets:', error);
-                // Fallback ke localStorage
-                const localStudents = JSON.parse(localStorage.getItem('students')) || [];
-                if (localStudents.length === 0) {
-                    emptyMessage.style.display = 'block';
-                    loadingMessage.style.display = 'none';
-                    return;
-                }
-                displayStudents(localStudents);
-            }
-            
-            loadingMessage.style.display = 'none';
-        }
-
-        function displayStudents(students) {
-            const tbody = document.getElementById('rekapTableBody');
-            const emptyMessage = document.getElementById('emptyRekap');
-            
-            tbody.innerHTML = '';
-            emptyMessage.style.display = 'none';
-            
-            // Urutkan berdasarkan nilai tertinggi
-            students.sort((a, b) => b.score - a.score);
-            
-            students.forEach((student, index) => {
-                const row = document.createElement('tr');
-                const statusBadge = student.score >= 70 ? 
-                    '<span class="badge bg-success">Lulus</span>' : 
-                    '<span class="badge bg-danger">Tidak Lulus</span>';
-                
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${student.name}</td>
-                    <td>${student.class}</td>
-                    <td><strong>${student.score}</strong></td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(${student.id})">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
 
         // Fungsi hapus data (hanya untuk localStorage)
         function deleteStudent(id) {
